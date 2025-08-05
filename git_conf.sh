@@ -25,8 +25,20 @@ if ! command -v git >/dev/null 2>&1; then
         SKIP_GIT_CONFIG=true
     else
         log_info "✅ Git installed successfully"
+
     fi
 fi
+
+# Get user information
+echo -ne "${BLUE}Enter your name for Git/SSH: ${NC}"
+read -r user_name
+echo -ne "${BLUE}Enter your email (GitHub email recommended): ${NC}"
+read -r user_email
+
+# Configure Git with user info
+log_info "Configuring Git with your information..."
+git config --global user.name "$user_name"
+git config --global user.email "$user_email"
 
 # Check if SSH key already exists
 if [[ -f ~/.ssh/id_ed25519 ]] || [[ -f ~/.ssh/id_rsa ]]; then
@@ -51,22 +63,6 @@ if [[ -f ~/.ssh/id_ed25519 ]] || [[ -f ~/.ssh/id_rsa ]]; then
         log_warn "Install xclip or xsel to auto-copy keys to clipboard"
     fi
     exit 0
-fi
-
-# Get user information
-if [[ "$SKIP_GIT_CONFIG" != true ]]; then
-    echo -ne "${BLUE}Enter your name for Git/SSH: ${NC}"
-    read -r user_name
-    echo -ne "${BLUE}Enter your email (GitHub email recommended): ${NC}"
-    read -r user_email
-
-    # Configure Git with user info
-    log_info "Configuring Git with your information..."
-    git config --global user.name "$user_name"
-    git config --global user.email "$user_email"
-else
-    echo -ne "${BLUE}Enter your email for SSH key: ${NC}"
-    read -r user_email
 fi
 
 # Generate SSH key
