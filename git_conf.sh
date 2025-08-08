@@ -14,6 +14,46 @@ log_info() {
 log_warn() {
     echo -e "${YELLOW}[SSH-GITHUB]${NC} $1"
 }
+# Function to wait for user input with quit option
+wait_for_user() {
+    local message="$1"
+    while true; do
+        echo ""
+        echo "$message"
+        echo "Press Enter to continue, or 'q' to quit..."
+        read -r user_input
+        
+        if [ "$user_input" = "q" ] || [ "$user_input" = "Q" ]; then
+            echo "Script cancelled by user."
+            exit 0
+        elif [ -z "$user_input" ]; then
+            break
+        else
+            echo "Invalid input. Press Enter to continue or 'q' to quit."
+        fi
+    done
+}
+
+# Function to test SSH connection
+test_ssh_connection() {
+    echo "Testing SSH connection to GitHub..."
+    # Remove BatchMode to allow key authentication, capture output
+    local ssh_output
+    ssh_output=$(ssh -T -o ConnectTimeout=10 -o StrictHostKeyChecking=no git@github-$REPO_NAME 2>&1)
+    local ssh_exit_code=$?
+    
+    # GitHub SSH returns exit code 1 for successful auth (this is normal)
+    # Check if the output contains success message
+    if echo "$ssh_output" | grep -q "successfully authenticated"; then
+        echo "✅ SSH connection successful!"
+        echo "Response: $ssh_output"
+        return 0
+    else
+        echo "❌ SSH connection failed."
+        echo "Output: $ssh_output"
+        return 1
+    fi
+}
 
 # Check if Git is installed
 if ! command -v git >/dev/null 2>&1; then
@@ -27,18 +67,17 @@ if ! command -v git >/dev/null 2>&1; then
         log_info "✅ Git installed successfully"
 
     fi
+    # Get user information
+    echo -ne "${BLUE}Enter your name for Git/SSH: ${NC}"
+    read -r user_name
+    echo -ne "${BLUE}Enter your email (GitHub email recommended): ${NC}"
+    read -r user_email
+
+    # Configure Git with user info
+    log_info "Configuring Git with your information..."
+    git config --global user.name "$user_name"
+    git config --global user.email "$user_email"
 fi
-
-# Get user information
-echo -ne "${BLUE}Enter your name for Git/SSH: ${NC}"
-read -r user_name
-echo -ne "${BLUE}Enter your email (GitHub email recommended): ${NC}"
-read -r user_email
-
-# Configure Git with user info
-log_info "Configuring Git with your information..."
-git config --global user.name "$user_name"
-git config --global user.email "$user_email"
 
 # Check if SSH key already exists
 if [[ -f ~/.ssh/id_ed25519 ]] || [[ -f ~/.ssh/id_rsa ]]; then
@@ -120,5 +159,36 @@ echo "2. Click 'New SSH key'"
 echo "3. Paste the key (already copied to clipboard)"
 echo "4. Give it a title (e.g., 'Ubuntu Desktop')"
 echo "5. Click 'Add SSH key'"
+echo "6. When you are ready, click Enter"
 echo ""
-echo "Test your connection with: ssh -T git@github.com"
+# Test connection and clone loop
+while true; do
+    echo ""
+    echo "🔄 Testing SSH connection..."
+    
+    if test_ssh_connection; then
+            echo ""
+            echo "🎉 SUCCESS! GitHub setup complete"
+            break
+    else
+        echo ""
+        echo "❌ SSH connection failed. Possible issues:"
+        echo "   - The key not added to GitHub yet"
+        echo "   - 'Allow write access' not checked"
+        echo "   - Key not properly configured"
+        echo ""
+        echo "Public key (copy this to GitHub):"
+        echo "-----------------------------------"
+        cat "$KEY_DIR/$KEY_NAME.pub"
+        echo "-----------------------------------"
+        echo ""
+        echo "GitHub URL: https://github.com/settings/keys"
+        echo ""
+        wait_for_user "Please check your GitHub SSH key setup and try again."
+    fi
+done
+
+echo ""
+echo "=========================================="
+echo "🎉 SETUP COMPLETE!"
+echo "=========================================="
