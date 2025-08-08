@@ -19,7 +19,9 @@ sudo apt install -y \
     tree \
     neofetch \
     build-essential \
-    software-properties-common
+    software-properties-common \
+    net-tools \
+    nmap
 
 log_info "✅ Essential utilities installed successfully"
 log_info "Available: curl, wget, zip, unzip, tree, neofetch, build-essential"
