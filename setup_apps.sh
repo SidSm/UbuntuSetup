@@ -144,15 +144,16 @@ get_module_info() {
     # Define module categories and display names
     case "$module" in
         # System & Essential
-        "utils") display_name="Essential Utilities"; category="system"; default="y" ;;
+        "essentials") display_name="Install curl wget zip unzip tree neofetch build-essential software-properties-common net-tools nmap"; category="system"; default="y" ;;
         "git") display_name="Git"; category="system"; default="y" ;;
         "ssh-github") display_name="SSH & GitHub Setup"; category="system"; default="y" ;;
+        "wireguard") display_name="Wireguard"; category="system"; default="y" ;;
         
         # Development Tools
-        "python") display_name="Python3 Environment"; category="development"; default="y" ;;
-        "nodejs") display_name="Node.js & npm"; category="development"; default="y" ;;
+        "py3") display_name="Python3 Environment"; category="development"; default="y" ;;
+        "npm") display_name="Node.js & npm"; category="development"; default="y" ;;
         "vscode") display_name="Visual Studio Code"; category="development"; default="y" ;;
-        "vscode-extensions") display_name="VS Code Extensions"; category="development"; default="y" ;;
+        "vscode_extensions") display_name="VS Code Extensions"; category="development"; default="y" ;;
         "docker") display_name="Docker"; category="development"; default="n" ;;
         "arduino") display_name="Arduino IDE"; category="development"; default="n" ;;
         
@@ -175,10 +176,10 @@ get_module_info() {
         "tmux") display_name="tmux"; category="utilities"; default="y" ;;
         "htop") display_name="htop"; category="utilities"; default="y" ;;
         "vim") display_name="Vim & Neovim"; category="utilities"; default="y" ;;
-        "gnome-tweaks") display_name="GNOME Tweaks"; category="utilities"; default="y" ;;
+        "gnome-extensions") display_name="GNOME Extensions"; category="utilities"; default="y" ;;
         
         # Hardware & Crypto
-        "rpi-imager") display_name="Raspberry Pi Imager"; category="hardware"; default="n" ;;
+        "rpi_imager") display_name="Raspberry Pi Imager"; category="hardware"; default="n" ;;
         "trezor") display_name="Trezor Suite"; category="crypto"; default="n" ;;
         "electrum") display_name="Electrum Wallet"; category="crypto"; default="n" ;;
         
@@ -256,9 +257,8 @@ fi
 
 # Group modules by category and ask for installation
 declare -A categories
-declare -A category_modules
 
-# Categorize modules
+# Categorize modules and ask for installation immediately
 for module in $available_modules; do
     if [[ "$module" == "wallpaper" ]]; then
         continue  # Handle wallpaper specially
@@ -269,37 +269,46 @@ for module in $available_modules; do
     category=$(echo "$module_info" | cut -d'|' -f2)
     default=$(echo "$module_info" | cut -d'|' -f3)
     
+    # Store category for header display
     categories["$category"]=1
-    # Use a different delimiter to avoid issues with spaces
-    category_modules["$category"]+="$module|||$display_name|||$default;;;"
 done
 
-# Ask for each category
+# Process each category in order
 for category in system development browsers multimedia communication utilities hardware crypto office other; do
     if [[ -n "${categories[$category]}" ]]; then
-        echo ""
-        case "$category" in
-            "system") log_header "=== SYSTEM & ESSENTIAL ===" ;;
-            "development") log_header "=== DEVELOPMENT TOOLS ===" ;;
-            "browsers") log_header "=== BROWSERS ===" ;;
-            "multimedia") log_header "=== MULTIMEDIA & CREATIVITY ===" ;;
-            "communication") log_header "=== COMMUNICATION ===" ;;
-            "utilities") log_header "=== SYSTEM UTILITIES ===" ;;
-            "hardware") log_header "=== HARDWARE TOOLS ===" ;;
-            "crypto") log_header "=== CRYPTOCURRENCY ===" ;;
-            "office") log_header "=== OFFICE & PRODUCTIVITY ===" ;;
-            "other") log_header "=== OTHER APPLICATIONS ===" ;;
-        esac
+        # Show category header
+        category_shown=false
         
         # Process modules in this category
-        # Split by ;;; delimiter and process each entry
-        IFS=';;;' read -ra module_entries <<< "${category_modules[$category]}"
-        for module_entry in "${module_entries[@]}"; do
-            if [[ -n "$module_entry" ]]; then
-                # Extract module info using ||| delimiter
-                module=$(echo "$module_entry" | cut -d'|' -f1)
-                display_name=$(echo "$module_entry" | cut -d'|' -f4)
-                default=$(echo "$module_entry" | cut -d'|' -f7)
+        for module in $available_modules; do
+            if [[ "$module" == "wallpaper" ]]; then
+                continue
+            fi
+            
+            module_info=$(get_module_info "$module")
+            display_name=$(echo "$module_info" | cut -d'|' -f1)
+            module_category=$(echo "$module_info" | cut -d'|' -f2)
+            default=$(echo "$module_info" | cut -d'|' -f3)
+            
+            # Only process if this module belongs to current category
+            if [[ "$module_category" == "$category" ]]; then
+                # Show category header only once when first module is found
+                if [[ "$category_shown" == false ]]; then
+                    echo ""
+                    case "$category" in
+                        "system") log_header "=== SYSTEM & ESSENTIAL ===" ;;
+                        "development") log_header "=== DEVELOPMENT TOOLS ===" ;;
+                        "browsers") log_header "=== BROWSERS ===" ;;
+                        "multimedia") log_header "=== MULTIMEDIA & CREATIVITY ===" ;;
+                        "communication") log_header "=== COMMUNICATION ===" ;;
+                        "utilities") log_header "=== SYSTEM UTILITIES ===" ;;
+                        "hardware") log_header "=== HARDWARE TOOLS ===" ;;
+                        "crypto") log_header "=== CRYPTOCURRENCY ===" ;;
+                        "office") log_header "=== OFFICE & PRODUCTIVITY ===" ;;
+                        "other") log_header "=== OTHER APPLICATIONS ===" ;;
+                    esac
+                    category_shown=true
+                fi
                 
                 ask_install "$module" "$display_name" "$category" "$default"
             fi
