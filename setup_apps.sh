@@ -270,7 +270,8 @@ for module in $available_modules; do
     default=$(echo "$module_info" | cut -d'|' -f3)
     
     categories["$category"]=1
-    category_modules["$category"]+="$module:$display_name:$default "
+    # Use a different delimiter to avoid issues with spaces
+    category_modules["$category"]+="$module|||$display_name|||$default;;;"
 done
 
 # Ask for each category
@@ -291,12 +292,17 @@ for category in system development browsers multimedia communication utilities h
         esac
         
         # Process modules in this category
-        for module_entry in ${category_modules[$category]}; do
-            module=$(echo "$module_entry" | cut -d':' -f1)
-            display_name=$(echo "$module_entry" | cut -d':' -f2)
-            default=$(echo "$module_entry" | cut -d':' -f3)
-            
-            ask_install "$module" "$display_name" "$category" "$default"
+        # Split by ;;; delimiter and process each entry
+        IFS=';;;' read -ra module_entries <<< "${category_modules[$category]}"
+        for module_entry in "${module_entries[@]}"; do
+            if [[ -n "$module_entry" ]]; then
+                # Extract module info using ||| delimiter
+                module=$(echo "$module_entry" | cut -d'|' -f1)
+                display_name=$(echo "$module_entry" | cut -d'|' -f4)
+                default=$(echo "$module_entry" | cut -d'|' -f7)
+                
+                ask_install "$module" "$display_name" "$category" "$default"
+            fi
         done
     fi
 done
