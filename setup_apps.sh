@@ -103,34 +103,30 @@ install_module() {
 
 # Function to discover available local modules
 discover_modules() {
-    log_info "Discovering local modules in $MODULES_DIR..."
-    
     # Check if modules directory exists
     if [[ ! -d "$MODULES_DIR" ]]; then
         log_error "Modules directory not found: $MODULES_DIR"
         return 1
     fi
     
-    # Find all .sh files in modules directory
-    local modules=""
+    # Find all .sh files in modules directory and extract names
+    local modules=()
     for module_file in "$MODULES_DIR"/*.sh; do
         # Check if files exist (handle case where no .sh files found)
         if [[ -f "$module_file" ]]; then
             # Extract module name (remove path and .sh extension)
             local module_name=$(basename "$module_file" .sh)
-            modules="$modules $module_name"
+            modules+=("$module_name")
         fi
     done
     
-    # Remove leading space and sort
-    modules=$(echo "$modules" | tr ' ' '\n' | sort | tr '\n' ' ')
-    
-    if [[ -z "$modules" ]]; then
+    if [[ ${#modules[@]} -eq 0 ]]; then
         log_error "No module files found in $MODULES_DIR"
         return 1
     fi
     
-    echo "$modules"
+    # Sort and output modules (one per line for safer parsing)
+    printf '%s\n' "${modules[@]}" | sort
     return 0
 }
 
@@ -238,13 +234,20 @@ echo "Modules directory: $MODULES_DIR"
 echo ""
 
 # Discover available modules
-available_modules=$(discover_modules)
-if [[ $? -ne 0 ]] || [[ -z "$available_modules" ]]; then
+log_info "Discovering local modules in $MODULES_DIR..."
+available_modules_array=()
+while IFS= read -r module; do
+    if [[ -n "$module" ]]; then
+        available_modules_array+=("$module")
+    fi
+done < <(discover_modules)
+
+if [[ ${#available_modules_array[@]} -eq 0 ]]; then
     log_error "Failed to discover modules. Exiting."
     exit 1
 fi
 
-log_info "Found $(echo "$available_modules" | wc -w) modules"
+log_info "Found ${#available_modules_array[@]} modules: ${available_modules_array[*]}"
 
 # Ask about system update first
 echo ""
@@ -259,7 +262,7 @@ fi
 declare -A categories
 
 # Categorize modules and ask for installation immediately
-for module in $available_modules; do
+for module in "${available_modules_array[@]}"; do
     if [[ "$module" == "wallpaper" ]]; then
         continue  # Handle wallpaper specially
     fi
@@ -280,7 +283,7 @@ for category in system development browsers multimedia communication utilities h
         category_shown=false
         
         # Process modules in this category
-        for module in $available_modules; do
+        for module in "${available_modules_array[@]}"; do
             if [[ "$module" == "wallpaper" ]]; then
                 continue
             fi
@@ -357,7 +360,7 @@ else
 fi
 
 # Install selected modules
-for module in $available_modules; do
+for module in "${available_modules_array[@]}"; do
     if [[ "${MODULE_SELECTIONS[$module]}" == "true" ]]; then
         module_info=$(get_module_info "$module")
         display_name=$(echo "$module_info" | cut -d'|' -f1)
