@@ -30,8 +30,7 @@ clone_repository() {
     
     echo "Cloning repository into $CLONE_DIR/$REPO_NAME..."
     cd "$CLONE_DIR"
-    
-    if git clone git@github-$REPO_NAME:$REPO_URL.git "$REPO_NAME"; then
+    if git clone https://github.com/$REPO_URL; then
         echo "✅ Repository cloned successfully!"
         
         cd "$REPO_NAME"
@@ -87,7 +86,6 @@ else
     echo ""
     echo "SSH works but cloning failed. This might be a temporary issue."
     echo "Maybe you want to delete the repo and clone it again?"
-    wait_for_user "Try again?"
 fi
 
 echo ""

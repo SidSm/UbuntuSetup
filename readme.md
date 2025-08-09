@@ -13,9 +13,14 @@ A comprehensive, modular Ubuntu setup script that automates the installation of 
 
 ## 🚀 Quick Start
 
-### One-line Installation
+### Setup git and clone the repo 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/SidSm/ubuntu-setup/main/setup.sh | bash
+curl -fsSL https://raw.githubusercontent.com/SidSm/UbuntuSetup/master/startup.sh | bash
+```
+
+### Setup git and add SSH keys to GitHub
+```bash
+curl -fsSL https://raw.githubusercontent.com/SidSm/UbuntuSetup/master/git_conf.sh | bash
 ```
 
 ### Download and Inspect First (Recommended)
