@@ -17,7 +17,7 @@ declare -a FAILED_INSTALLS=()
 declare -A MODULE_SELECTIONS=()
 
 # Local modules directory
-MODULES_DIR="$(dirname "$0")/modules"
+MODULES_DIR="$HOME/Zdrojaky/UbuntuSetup/modules"
 if [[ ! -d "$MODULES_DIR" ]]; then
     MODULES_DIR="./modules"
 fi
@@ -76,6 +76,7 @@ install_module() {
     local module_name="$1"
     local display_name="$2"
     local module_path="$MODULES_DIR/${module_name}.sh"
+    echo $module_path
     
     # Check if module file exists
     if [[ ! -f "$module_path" ]]; then
