@@ -7,6 +7,7 @@ A comprehensive, modular Ubuntu setup script that automates the installation of 
 - **🎯 Interactive Selection** - Choose exactly what you want to install
 - **🧩 Modular Architecture** - Each app has its own installation module
 - **🛡️ Error Handling** - Detailed success/failure reporting
+- **🧙‍♂️ GNOME Settings Import** - Setting up all GNOME preferences 
 - **🔑 SSH & GitHub Setup** - Automated SSH key generation and Git configuration
 - **🖼️ Custom Wallpapers** - Download and set wallpapers from your GitHub repo
 - **📊 Installation Reports** - Clear summary of what succeeded and failed
@@ -21,6 +22,12 @@ curl -fsSL https://raw.githubusercontent.com/SidSm/UbuntuSetup/master/startup.sh
 ### Setup git and add SSH keys to GitHub
 ```bash
 curl -fsSL https://raw.githubusercontent.com/SidSm/UbuntuSetup/master/git_conf.sh | bash
+```
+
+### Manual Import/Export GNOME Settings
+```bash
+dconf load / < gnome-settings-backup.dconf # Import
+dconf dump / > gnome-settings-backup.dconf # Export
 ```
 
 ### Download and Inspect First (Recommended)

@@ -18,6 +18,8 @@ declare -A MODULE_SELECTIONS=()
 
 # Local modules directory
 MODULES_DIR="$HOME/Zdrojaky/UbuntuSetup/modules"
+GNOME_SETTINGS_FILE="$HOME/Zdrojaky/UbuntuSetup/gnome-settings.dconf"
+
 if [[ ! -d "$MODULES_DIR" ]]; then
     MODULES_DIR="./modules"
 fi
@@ -387,5 +389,34 @@ fi
 if [[ " ${SUCCESSFUL_INSTALLS[*]} " =~ " SSH & GitHub Setup " ]]; then
     echo "🔑 Note: Your SSH key has been generated and copied to clipboard. Add it to GitHub in Settings > SSH Keys."
 fi
+
+echo ""
+# Check if backup file exists
+if [ -f "$GNOME_SETTINGS_FILE" ]; then
+    echo "Do you also want to import GNOME settings from this file?"
+    echo "$GNOME_SETTINGS_FILE"
+    echo ""
+    read -p "Do you want to proceed? (y/n): " -r
+    echo ""
+
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        echo "Importing settings..."
+        dconf load / < "$GNOME_SETTINGS_FILE"
+        
+        if [ $? -eq 0 ]; then
+            echo "Settings imported successfully!"
+            echo "You may need to log out and back in for all changes to take effect."
+        else
+            echo "Error: Failed to import settings."
+        fi
+    else
+        echo "Import cancelled."
+    fi
+    
+else
+    echo "Error: Gnome settings file not found at $GNOME_SETTINGS_FILE , skipping..."
+fi
+
+
 echo ""
 echo "🎉 Setup completed!"
