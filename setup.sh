@@ -404,6 +404,8 @@ if [ -f "$GNOME_SETTINGS_FILE" ]; then
         dconf load / < "$GNOME_SETTINGS_FILE"
         
         if [ $? -eq 0 ]; then
+            echo "Disabling original SUPER+Q shortcut..."
+            gsettings set org.gnome.shell.extensions.dash-to-dock shortcut "[]"
             echo "Settings imported successfully!"
             echo "You may need to log out and back in for all changes to take effect."
         else
