@@ -67,16 +67,47 @@ if ! command -v git >/dev/null 2>&1; then
         log_info "✅ Git installed successfully"
 
     fi
-    # Get user information
-    echo -ne "${BLUE}Enter your name for Git/SSH: ${NC}"
-    read -r user_name
-    echo -ne "${BLUE}Enter your email (GitHub email recommended): ${NC}"
-    read -r user_email
+fi
 
-    # Configure Git with user info
-    log_info "Configuring Git with your information..."
-    git config --global user.name "$user_name"
-    git config --global user.email "$user_email"
+if command -v git >/dev/null 2>&1; then
+
+    echo -e "${GREEN}Git is installed (version $(git --version | cut -d' ' -f3))${NC}"
+    echo ""
+
+    # Ask user for confirmation
+    read -p "Do you wish to setup git user settings (name&email)? (y/n): " -r
+    echo ""
+
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        # Get user information
+        echo -ne "${BLUE}Enter your name for Git: ${NC}"
+        read -r user_name
+        
+        echo -ne "${BLUE}Enter your email (GitHub email recommended): ${NC}"
+        read -r user_email
+        
+        # Validate input
+        if [ -z "$user_name" ] || [ -z "$user_email" ]; then
+            echo -e "${RED}Error: Name and email cannot be empty.${NC}"
+            exit 1
+        fi
+        
+        # Configure Git with user info
+        echo -e "${GREEN}Configuring Git with your information...${NC}"
+        git config --global user.name "$user_name"
+        git config --global user.email "$user_email"
+        
+        if [ $? -eq 0 ]; then
+            echo -e "${GREEN}Git configured successfully!${NC}"
+            echo ""
+            echo "Current configuration:"
+            echo "  Name:  $(git config --global user.name)"
+            echo "  Email: $(git config --global user.email)"
+        else
+            echo -e "${RED}Error: Failed to configure Git.${NC}"
+            exit 1
+        fi
+    fi
 fi
 
 # Check if SSH key already exists
